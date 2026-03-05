@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title> Hearcules — Listen to the Web</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #1a1d24;
+    --surface3: #22262f;
+    --border: #2a2e38;
+    --accent: #4ade80;
+    --accent2: #22d3ee;
+    --accent3: #a78bfa;
+    --warn: #fb923c;
+    --text: #e8eaf0;
+    --text2: #8b92a5;
+    --text3: #4d5568;
+    --highlight-bg: rgba(74,222,128,0.18);
+    --highlight-word: rgba(74,222,128,0.4);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(74,222,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(34,211,238,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 60% 30%, rgba(167,139,250,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Layout */
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 120px; }
+
+  /* Header */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .logo { display:flex; align-items:center; gap: 12px; }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 20px;
+  }
+  .logo-text { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-text span { color: var(--accent); }
+  .tagline { font-size: 0.75rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+  .header-actions { display:flex; gap: 10px; }
+  .pill-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.2s;
+  }
+  .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Input Section */
+  .input-section { margin-bottom: 32px; }
+  .section-label {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 14px;
+  }
+
+  .input-tabs {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.2s;
+    display: flex; align-items:center; gap: 6px;
+  }
+  .tab-btn.active {
+    background: var(--surface3);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .input-panel { display: none; }
+  .input-panel.active { display: block; }
+
+  .url-input-wrap {
+    display: flex; gap: 10px; align-items:stretch;
+  }
+  .url-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Sora', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--accent); }
+  .url-input::placeholder { color: var(--text3); }
+
+  .fetch-btn {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    border: none;
+    color: #0a0c10;
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex; align-items:center; gap: 8px;
+  }
+  .fetch-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(74,222,128,0.3); }
+  .fetch-btn:active { transform: translateY(0); }
+  .fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(74,222,128,0.04);
+  }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .drop-text { color: var(--text2); font-size: 0.9rem; }
+  .drop-text strong { color: var(--accent); }
+
+  .text-input-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    width: 100%;
+    min-height: 140px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Lora', serif;
+    line-height: 1.7;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .text-input-area:focus { border-color: var(--accent); }
+  .text-input-area::placeholder { color: var(--text3); }
+
+  .text-actions { display:flex; justify-content:flex-end; margin-top: 10px; }
+
+  /* Status */
+  .status-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text2);
+  }
+  .status-bar.visible { display: flex; }
+  .status-bar.error { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+  .status-bar.success { border-color: var(--accent); color: var(--accent); background: rgba(74,222,128,0.08); }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Playlist */
+  .playlist-section { margin-bottom: 28px; display: none; }
+  .playlist-section.visible { display: block; }
+  .playlist-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+  .playlist-items { display: flex; flex-direction:column; gap: 8px; }
+  .playlist-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex; align-items:center; gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .playlist-item:hover { border-color: var(--accent2); }
+  .playlist-item.active { border-color: var(--accent); background: rgba(74,222,128,0.06); }
+  .playlist-item.done { opacity: 0.5; }
+  .item-icon { font-size: 1.1rem; flex-shrink:0; }
+  .item-title { flex:1; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item-duration { font-size:0.78rem; color:var(--text2); font-family:'JetBrains Mono',monospace; }
+  .item-remove { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:2px 6px; border-radius:4px; }
+  .item-remove:hover { color:#ef4444; background: rgba(239,68,68,0.1); }
+
+  /* Player Section */
+  .player-section { display: none; }
+  .player-section.visible { display: block; }
+
+  .content-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .content-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items:flex-start; justify-content:space-between; gap: 16px;
+  }
+  .content-meta { flex:1; }
+  .content-source {
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .content-title {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .content-stats { display:flex; gap: 16px; font-size:0.78rem; color:var(--text2); }
+  .stat { display:flex; align-items:center; gap:4px; }
+
+  .chapter-list-toggle {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    white-space:nowrap;
+    transition: all 0.2s;
+  }
+  .chapter-list-toggle:hover { color:var(--text); border-color: var(--accent3); }
+
+  .chapters-panel {
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    max-height: 0; overflow:hidden;
+    transition: max-height 0.3s ease;
+  }
+  .chapters-panel.open { max-height: 280px; overflow-y:auto; }
+  .chapter-item {
+    padding: 10px 24px;
+    display:flex; align-items:center; gap:10px;
+    cursor:pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    font-size:0.85rem;
+  }
+  .chapter-item:hover { background: var(--surface3); }
+  .chapter-item.active { color: var(--accent); }
+  .chapter-num { font-family:'JetBrains Mono',monospace; color:var(--text3); font-size:0.75rem; min-width:28px; }
+
+  /* Reader */
+  .reader-body {
+    padding: 28px 32px;
+    max-height: 420px;
+    overflow-y: auto;
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--text);
+    scroll-behavior: smooth;
+  }
+  .reader-body::-webkit-scrollbar { width: 4px; }
+  .reader-body::-webkit-scrollbar-track { background: transparent; }
+  .reader-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sentence {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 1px 2px;
+    margin: 0 -2px;
+    transition: background 0.15s;
+    display: inline;
+  }
+  .sentence:hover { background: rgba(255,255,255,0.05); }
+  .sentence.reading { background: var(--highlight-bg); }
+  .sentence.done { color: var(--text2); }
+
+  /* Controls */
+  .controls-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  /* Progress */
+  .progress-section { margin-bottom: 20px; }
+  .progress-top { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
+  .progress-label { font-size:0.78rem; color:var(--text2); font-family:'JetBrains Mono',monospace; }
+  .progress-track {
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  /* Main controls */
+  .main-controls { display:flex; align-items:center; justify-content:center; gap: 16px; margin-bottom: 24px; }
+
+  .ctrl-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); transform:scale(1.05); }
+
+  .play-btn {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    border: none;
+    color: #0a0c10;
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    font-size: 1.4rem;
+    transition: all 0.2s;
+    box-shadow: 0 0 0 0 rgba(74,222,128,0.4);
+  }
+  .play-btn:hover { transform:scale(1.06); box-shadow: 0 0 0 8px rgba(74,222,128,0.12); }
+  .play-btn.playing { animation: pulse-play 2s ease-in-out infinite; }
+  @keyframes pulse-play {
+    0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(74,222,128,0.0); }
+  }
+
+  /* Settings row */
+  .settings-row { display:flex; gap: 20px; flex-wrap:wrap; align-items:center; }
+  .setting-group { display:flex; flex-direction:column; gap: 6px; flex:1; min-width: 120px; }
+  .setting-label { font-size:0.72rem; font-family:'JetBrains Mono',monospace; color:var(--text2); text-transform:uppercase; letter-spacing:0.1em; }
+
+  .range-wrap { display:flex; align-items:center; gap:10px; }
+  .range-val { font-size:0.8rem; color:var(--accent); font-family:'JetBrains Mono',monospace; min-width:32px; text-align:right; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    outline: none;
+    flex:1;
+    cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor:pointer;
+    transition: transform 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  .voice-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-family: 'Sora', sans-serif;
+    outline: none;
+    cursor:pointer;
+    width:100%;
+  }
+  .voice-select:focus { border-color: var(--accent); }
+
+  .toggle-group { display:flex; gap:8px; flex-wrap:wrap; }
+  .toggle-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    cursor:pointer;
+    font-family:'Sora',sans-serif;
+    transition: all 0.2s;
+  }
+  .toggle-chip.on { background: rgba(74,222,128,0.12); border-color:var(--accent); color:var(--accent); }
+
+  /* Word highlight */
+  .word { display:inline; }
+  .word.active-word { background: var(--highlight-word); border-radius:3px; padding: 0 1px; }
+
+  /* Waveform */
+  .waveform {
+    display:flex; align-items:center; gap: 3px;
+    height: 32px;
+    margin-bottom: 16px;
+  }
+  .wave-bar {
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    opacity: 0.4;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  .wave-bar:nth-child(2) { animation-delay:0.1s; }
+  .wave-bar:nth-child(3) { animation-delay:0.2s; }
+  .wave-bar:nth-child(4) { animation-delay:0.3s; }
+  .wave-bar:nth-child(5) { animation-delay:0.15s; }
+  .wave-bar:nth-child(6) { animation-delay:0.25s; }
+  .wave-bar:nth-child(7) { animation-delay:0.05s; }
+  .wave-bar:nth-child(8) { animation-delay:0.35s; }
+  .wave-bar.paused { animation-play-state: paused; opacity:0.2; }
+  @keyframes wave {
+    0%,100% { height: 6px; }
+    50% { height: 24px; }
+  }
+
+  /* Keyboard shortcuts hint */
+  .shortcuts-bar {
+    display:flex; gap:16px; flex-wrap:wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .shortcut { display:flex; align-items:center; gap: 6px; font-size:0.75rem; color:var(--text3); }
+  .key {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.7rem;
+    color: var(--text2);
+  }
+
+  /* Toast */
+  .toast-container { position:fixed; bottom:24px; right:24px; z-index:1000; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size:0.85rem;
+    max-width:320px;
+    animation: slideIn 0.3s ease;
+    display:flex; align-items:center; gap: 8px;
+  }
+  .toast.success { border-color:var(--accent); }
+  .toast.error { border-color:#ef4444; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+  /* Mobile swipe hint */
+  .swipe-hint {
+    display: none;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    justify-content: center;
+  }
+  .swipe-item { display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--text3); }
+  .swipe-icon {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.85rem;
+    color: var(--accent2);
+  }
+
+  /* Swipe feedback overlay */
+  .swipe-feedback {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    background: rgba(17,19,24,0.94);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px 32px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 9999;
+    backdrop-filter: blur(12px);
+    text-align: center;
+    min-width: 160px;
+  }
+  .swipe-feedback.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  .swipe-feedback .sf-icon { font-size:1.6rem; display:block; margin-bottom:6px; }
+  .swipe-feedback .sf-label { font-size:0.8rem; color:var(--text2); margin-top:4px; display:block; }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .header-actions { display:none; }
+    .reader-body { padding: 20px; font-size: 0.98rem; }
+    .controls-card { padding: 16px; }
+    .settings-row { gap: 12px; }
+    .content-header { flex-direction:column; }
+    .shortcuts-bar { display:none !important; }
+    .swipe-hint { display:flex; }
+    .url-input-wrap { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🎧</div>
+      <div>
+        <div class="logo-text">Ear<span>Learn</span></div>
+        <div class="tagline">// turn any page into a podcast</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="pill-btn" onclick="showShortcuts()">⌨ Shortcuts</button>
+      <button class="pill-btn" id="themeToggle" onclick="toggleTheme()">☀ Light Mode</button>
+    </div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="section-label">— Add content to listen</div>
+
+    <div class="input-tabs">
+      <button class="tab-btn active" onclick="switchTab('url')">🌐 URL</button>
+      <button class="tab-btn" onclick="switchTab('file')">📄 File</button>
+      <button class="tab-btn" onclick="switchTab('text')">✍ Paste Text</button>
+    </div>
+
+    <!-- URL -->
+    <div class="input-panel active" id="panel-url">
+      <div class="url-input-wrap">
+        <input class="url-input" id="urlInput" type="url" placeholder="https://www.geeksforgeeks.org/any-article..." />
+        <button class="fetch-btn" id="fetchBtn" onclick="fetchURL()">
+          <span id="fetchBtnIcon">⚡</span> Fetch & Listen
+        </button>
+      </div>
+      <div class="url-input-wrap" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+        <button class="pill-btn" onclick="setExample('https://en.wikipedia.org/wiki/Artificial_intelligence')">📖 Wikipedia: AI</button>
+        <button class="pill-btn" onclick="setExample('https://www.geeksforgeeks.org/introduction-to-algorithms/')">💻 GFG: Algorithms</button>
+        <button class="pill-btn" onclick="setExample('https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Introduction')">🔧 MDN: JS Guide</button>
+      </div>
+    </div>
+
+    <!-- File -->
+    <div class="input-panel" id="panel-file">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx,.md,.html,.png,.jpg,.jpeg,.webp,.tiff" onchange="handleFile(event)"/>
+        <div class="drop-icon">📂</div>
+        <div class="drop-text">Drop your <strong>PDF, DOCX, TXT, MD, HTML</strong> or <strong>image</strong> file here<br/>
+        <span style="font-size:0.78rem;color:var(--text3);">Scanned PDFs &amp; images → auto OCR  ·  DOCX → direct extract</span></div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div class="input-panel" id="panel-text">
+      <textarea class="text-input-area" id="textInput" placeholder="Paste any text here — notes, articles, documentation, anything...&#10;&#10;Hearcules will read it to you clearly."></textarea>
+      <div class="text-actions">
+        <button class="fetch-btn" onclick="loadText()" style="padding:10px 24px; font-size:0.85rem;">▶ Load & Listen</button>
+      </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <div class="spinner" id="statusSpinner"></div>
+      <span id="statusText">Fetching content...</span>
+    </div>
+  </div>
+
+  <!-- Playlist -->
+  <div class="playlist-section" id="playlistSection">
+    <div class="playlist-header">
+      <div class="section-label" style="margin:0">— Queue (<span id="queueCount">0</span>)</div>
+      <button class="pill-btn" onclick="clearQueue()">Clear All</button>
+    </div>
+    <div class="playlist-items" id="playlistItems"></div>
+  </div>
+
+  <!-- Player -->
+  <div class="player-section" id="playerSection">
+
+    <div class="content-card">
+      <div class="content-header">
+        <div class="content-meta">
+          <div class="content-source" id="contentSource">🌐 <span id="sourceUrl">—</span></div>
+          <div class="content-title" id="contentTitle">Loading...</div>
+          <div class="content-stats">
+            <div class="stat">📖 <span id="wordCount">—</span> words</div>
+            <div class="stat">⏱ ~<span id="readTime">—</span> min</div>
+            <div class="stat">📑 <span id="sentenceCount">—</span> sentences</div>
+          </div>
+        </div>
+        <button class="chapter-list-toggle" id="chaptersToggle" onclick="toggleChapters()" style="display:none">📑 Chapters</button>
+      </div>
+
+      <div class="chapters-panel" id="chaptersPanel">
+        <div id="chaptersList"></div>
+      </div>
+
+      <div class="reader-body" id="readerBody"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-card">
+
+      <!-- Waveform -->
+      <div style="display:flex; justify-content:center; margin-bottom:12px;">
+        <div class="waveform" id="waveform">
+          <div class="wave-bar paused" style="height:8px"></div>
+          <div class="wave-bar paused" style="height:14px"></div>
+          <div class="wave-bar paused" style="height:20px"></div>
+          <div class="wave-bar paused" style="height:10px"></div>
+          <div class="wave-bar paused" style="height:24px"></div>
+          <div class="wave-bar paused" style="height:16px"></div>
+          <div class="wave-bar paused" style="height:8px"></div>
+          <div class="wave-bar paused" style="height:18px"></div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-top">
+          <span class="progress-label" id="progressLabel">0 / 0 sentences</span>
+          <span class="progress-label" id="progressPct">0%</span>
+        </div>
+        <div class="progress-track" id="progressTrack" onclick="seekProgress(event)">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Main controls -->
+      <div class="main-controls">
+        <button class="ctrl-btn" onclick="rewind()" title="Rewind 2 sentences">⏮</button>
+        <button class="ctrl-btn" onclick="prevSentence()" title="Previous sentence">◀</button>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+        <button class="ctrl-btn" onclick="nextSentence()" title="Next sentence">▶</button>
+        <button class="ctrl-btn" onclick="fastForward()" title="Skip 5 sentences">⏭</button>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-row">
+        <div class="setting-group">
+          <div class="setting-label">Speed</div>
+          <div class="range-wrap">
+            <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="0.9" oninput="updateSpeed(this.value)"/>
+            <span class="range-val" id="speedVal">0.9×</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">Pitch</div>
+          <div class="range-wrap">
+            <input type="range" id="pitchRange" min="0.5" max="2" step="0.1" value="1" oninput="updatePitch(this.value)"/>
+            <span class="range-val" id="pitchVal">1.0</span>
+          </div>
+        </div>
+        <div class="setting-group" style="min-width:160px">
+          <div class="setting-label">Voice</div>
+          <select class="voice-select" id="voiceSelect" onchange="updateVoice()"></select>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">Options</div>
+          <div class="toggle-group">
+            <button class="toggle-chip on" id="chipHighlight" onclick="toggleChip(this, 'highlight')">Highlight</button>
+            <button class="toggle-chip on" id="chipScroll" onclick="toggleChip(this, 'scroll')">Auto-scroll</button>
+            <button class="toggle-chip" id="chipPause" onclick="toggleChip(this, 'pause')">Para-pause</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <!-- Keyboard shortcuts (desktop only) -->
+      <div class="shortcuts-bar">
+        <div class="shortcut"><span class="key">Space</span> Play/Pause</div>
+        <div class="shortcut"><span class="key">←</span> Prev sentence</div>
+        <div class="shortcut"><span class="key">→</span> Next sentence</div>
+        <div class="shortcut"><span class="key">+</span> Faster</div>
+        <div class="shortcut"><span class="key">-</span> Slower</div>
+        <div class="shortcut"><span class="key">R</span> Rewind</div>
+      </div>
+
+      <!-- Swipe gestures (mobile only) -->
+      <div class="swipe-hint">
+        <div class="swipe-item"><span class="swipe-icon">👆👆</span> Double-tap — Play/Pause</div>
+        <div class="swipe-item"><span class="swipe-icon">👉</span> Swipe right — Next sentence</div>
+        <div class="swipe-item"><span class="swipe-icon">👈</span> Swipe left — Prev sentence</div>
+        <div class="swipe-item"><span class="swipe-icon">👆</span> Swipe up — Speed up</div>
+        <div class="swipe-item"><span class="swipe-icon">👇</span> Swipe down — Slow down</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Swipe feedback overlay -->
+<div class="swipe-feedback" id="swipeFeedback">
+  <span class="sf-icon" id="sfIcon">👉</span>
+  <span id="sfText">Next</span>
+  <span class="sf-label" id="sfLabel"></span>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ==================== STATE ====================
+const state = {
+  sentences: [],
+  currentIdx: 0,
+  isPlaying: false,
+  utterance: null,
+  voices: [],
+  selectedVoice: null,
+  speed: 0.9,
+  pitch: 1.0,
+  highlight: true,
+  autoScroll: true,
+  paraPause: false,
+  queue: [],
+  chapters: [],
+  currentTab: 'url',
+  title: '',
+  source: ''
+};
+
+// ==================== INIT ====================
+window.addEventListener('DOMContentLoaded', () => {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  setupKeyboard();
+  setupDragDrop();
+  setupSwipeGestures();
+  loadSettings();
+});
+
+function loadVoices() {
+  state.voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  const sel = document.getElementById('voiceSelect');
+  sel.innerHTML = '';
+  // prefer natural-sounding voices
+  const preferred = ['Google UK English Female','Google US English','Microsoft Zira','Microsoft David','Alex','Samantha','Karen'];
+  const sorted = [...state.voices].sort((a,b) => {
+    const ai = preferred.findIndex(p => a.name.includes(p.split(' ')[1] || p));
+    const bi = preferred.findIndex(p => b.name.includes(p.split(' ')[1] || p));
+    if(ai >= 0 && bi < 0) return -1;
+    if(bi >= 0 && ai < 0) return 1;
+    return 0;
+  });
+  sorted.forEach((v,i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name.replace('Google ','').replace('Microsoft ','');
+    sel.appendChild(opt);
+  });
+  if(sorted.length > 0) state.selectedVoice = sorted[0];
+}
+
+// ==================== TAB SWITCHING ====================
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['url','file','text'][i] === tab));
+  document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ==================== URL FETCH ====================
+async function fetchURL() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Please enter a URL', 'error'); return; }
+
+  setStatus('loading', 'Fetching content from URL...');
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+
+  try {
+    // Use multiple CORS proxies as fallbacks
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
+
+    let html = null;
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy);
+        if (!res.ok) continue;
+        const data = await res.json().catch(() => null);
+        if (data && data.contents) { html = data.contents; break; }
+        const text = await res.text().catch(() => null);
+        if (text) { html = text; break; }
+      } catch(e) { continue; }
+    }
+
+    if (!html) throw new Error('Could not fetch the URL. The site may block external requests.');
+
+    const { title, text, chapters } = extractContent(html, url);
+    loadContent(text, title, url, '🌐', chapters);
+
+    setStatus('success', `Loaded: ${title}`);
+    setTimeout(() => hideStatus(), 3000);
+  } catch(e) {
+    setStatus('error', e.message || 'Failed to fetch. Try pasting the text instead.');
+  }
+  btn.disabled = false;
+}
+
+function setExample(url) {
+  document.getElementById('urlInput').value = url;
+  fetchURL();
+}
+
+// ==================== CONTENT EXTRACTION ====================
+function extractContent(html, url) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Remove junk elements
+  ['script','style','nav','header','footer','aside','iframe','noscript',
+   '.advertisement','.ad','.sidebar','#sidebar','.cookie','.popup',
+   '.modal','.newsletter','.comments','[aria-hidden="true"]'].forEach(sel => {
+    try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch(e){}
+  });
+
+  const title = doc.querySelector('h1')?.textContent?.trim() ||
+                doc.querySelector('title')?.textContent?.trim() ||
+                new URL(url).hostname;
+
+  // Find main content
+  const candidates = ['article','main','[role="main"]','.content','.post-content',
+                       '.entry-content','.article-body','#content','.post','.markdown-body'];
+  let mainEl = null;
+  for(const sel of candidates) {
+    const el = doc.querySelector(sel);
+    if(el && el.textContent.trim().length > 200) { mainEl = el; break; }
+  }
+  if(!mainEl) mainEl = doc.body;
+
+  // Extract chapters from headings
+  const chapters = [];
+  mainEl.querySelectorAll('h1,h2,h3').forEach((h, i) => {
+    const text = h.textContent.trim();
+    if(text.length > 2) {
+      h.setAttribute('data-chapter', i);
+      chapters.push({ title: text, idx: null }); // idx assigned after sentences parse
+    }
+  });
+
+  // Extract text preserving structure
+  let text = '';
+  const walk = (el) => {
+    const tag = el.tagName?.toLowerCase();
+    if(['script','style','nav','header','footer'].includes(tag)) return;
+    if(el.nodeType === 3) {
+      const t = el.textContent.replace(/\s+/g,' ').trim();
+      if(t.length > 1) text += t + ' ';
+    } else if(el.nodeType === 1) {
+      if(['p','h1','h2','h3','h4','li','blockquote','td','th','div'].includes(tag)) {
+        const inner = el.innerText || el.textContent;
+        const cleaned = inner.replace(/\s+/g,' ').trim();
+        if(cleaned.length > 5) text += cleaned + '\n\n';
+      } else {
+        el.childNodes.forEach(walk);
+      }
+    }
+  };
+  walk(mainEl);
+
+  return { title, text: cleanText(text), chapters };
+}
+
+function cleanText(raw) {
+  return raw
+    .replace(/\[\d+\]/g, '') // remove citation numbers
+    .replace(/https?:\/\/\S+/g, '') // remove URLs
+    .replace(/\s{3,}/g, '\n\n') // collapse whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// ==================== FILE HANDLING ====================
+async function handleFile(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  await processFile(file);
+}
+
+async function processFile(file) {
+  setStatus('loading', `Reading ${file.name}...`);
+  try {
+    let text = '';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const title = file.name.replace(/\.[^.]+$/, '');
+
+    if (['txt', 'md'].includes(ext)) {
+      text = await file.text();
+    } else if (ext === 'html') {
+      const html = await file.text();
+      const { text: t } = extractContent(html, file.name);
+      text = t;
+    } else if (ext === 'pdf') {
+      text = await extractPDFWithFallback(file);
+    } else if (['doc', 'docx'].includes(ext)) {
+      text = await extractDOCXText(file);
+    } else if (['png', 'jpg', 'jpeg', 'webp', 'tiff', 'bmp'].includes(ext)) {
+      setStatus('loading', '🔍 Running OCR on image...');
+      text = await extractWithTesseract(file, 'image');
+    } else {
+      text = await file.text();
+    }
+
+    if (!text || text.trim().length < 10) throw new Error('Could not extract readable text from this file.');
+    loadContent(text, title, file.name, '📄', []);
+    setStatus('success', `Loaded: ${file.name}`);
+    setTimeout(() => hideStatus(), 2000);
+  } catch (e) {
+    setStatus('error', e.message);
+  }
+}
+
+// ---- PDF: try PDF.js first, fall back to Tesseract OCR ----
+async function extractPDFWithFallback(file) {
+  setStatus('loading', '📄 Extracting PDF text...');
+  try {
+    const text = await extractWithPDFjs(file);
+    if (text && text.trim().length > 80) return cleanText(text);
+    // Not enough text — likely a scanned PDF
+    setStatus('loading', '🔍 Scanned PDF detected — running OCR (this may take a moment)...');
+    return await extractWithTesseract(file, 'pdf');
+  } catch (e) {
+    setStatus('loading', '🔍 Falling back to OCR...');
+    return await extractWithTesseract(file, 'pdf');
+  }
+}
+
+async function extractWithPDFjs(file) {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  const pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let fullText = '';
+  const total = pdf.numPages;
+
+  for (let i = 1; i <= total; i++) {
+    setStatus('loading', `📄 Reading PDF page ${i} of ${total}...`);
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n\n';
+  }
+  return fullText;
+}
+
+// ---- DOCX: Mammoth.js ----
+async function extractDOCXText(file) {
+  setStatus('loading', '📝 Reading document...');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  const ab = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer: ab });
+  if (!result.value || result.value.trim().length < 10) {
+    throw new Error('Could not extract text from this document. It may be image-based — try OCR.');
+  }
+  return cleanText(result.value);
+}
+
+// ---- Tesseract OCR (for scanned PDFs and image files) ----
+async function extractWithTesseract(file, type) {
+  await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+
+  if (type === 'pdf') {
+    // Convert PDF pages to images via PDF.js, then OCR each
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const ab = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    const total = pdf.numPages;
+    let fullText = '';
+
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          setStatus('loading', `🔍 OCR page — ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
+
+    for (let i = 1; i <= total; i++) {
+      setStatus('loading', `🔍 OCR scanning page ${i} of ${total}...`);
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 }); // scale up for better OCR
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const { data: { text } } = await worker.recognize(canvas);
+      fullText += text + '\n\n';
+    }
+
+    await worker.terminate();
+    if (!fullText.trim()) throw new Error('OCR could not extract text from this PDF.');
+    return cleanText(fullText);
+
+  } else {
+    // Direct image OCR
+    setStatus('loading', '🔍 Running OCR on image...');
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          setStatus('loading', `🔍 OCR progress: ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+    if (!text.trim()) throw new Error('OCR could not extract text from this image.');
+    return cleanText(text);
+  }
+}
+
+// ---- Lazy script loader ----
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error(`Failed to load: ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
+// ==================== TEXT INPUT ====================
+function loadText() {
+  const text = document.getElementById('textInput').value.trim();
+  if(!text) { showToast('Please paste some text first', 'error'); return; }
+  const firstLine = text.split('\n')[0].substring(0, 60);
+  loadContent(text, firstLine || 'Pasted Text', 'Text input', '✍', []);
+}
+
+// ==================== LOAD CONTENT ====================
+function loadContent(text, title, source, icon, chapters) {
+  if(!text || text.trim().length < 10) {
+    setStatus('error', 'Not enough readable text found.');
+    return;
+  }
+
+  // Split into sentences
+  const raw = text.replace(/\n\n+/g, ' [PARA] ');
+  const sentences = splitSentences(raw);
+
+  if(sentences.length === 0) { setStatus('error', 'No readable sentences found.'); return; }
+
+  state.sentences = sentences;
+  state.currentIdx = 0;
+  state.isPlaying = false;
+  state.title = title;
+  state.source = source;
+  state.chapters = chapters;
+
+  // Add to queue
+  const queueItem = { title, source, icon, sentences, chapters };
+  state.queue.push(queueItem);
+  updateQueueUI();
+
+  // Show player
+  renderReader(sentences, title, source, icon, chapters);
+  document.getElementById('playerSection').classList.add('visible');
+  stopSpeech();
+
+  showToast(`✅ Loaded: ${sentences.length} sentences (~${Math.ceil(sentences.length * 6 / 60)} min)`, 'success');
+  updateStats(sentences, source, title);
+}
+
+function splitSentences(text) {
+  // Smart sentence splitter
+  const parts = text.split(/(?<=[.!?])\s+(?=[A-Z"'])|(?<=\n)|(\[PARA\])/);
+  const result = [];
+  for(const p of parts) {
+    if(!p) continue;
+    const clean = p.replace('[PARA]','').trim();
+    if(clean.length > 4) result.push(clean);
+  }
+  return result;
+}
+
+// ==================== RENDER READER ====================
+function renderReader(sentences, title, source, icon, chapters) {
+  document.getElementById('contentTitle').textContent = title;
+  document.getElementById('sourceUrl').textContent = source.length > 60 ? source.substring(0,57)+'...' : source;
+  document.getElementById('contentSource').querySelector('span').textContent = source.length > 60 ? source.substring(0,57)+'...' : source;
+
+  const body = document.getElementById('readerBody');
+  body.innerHTML = '';
+
+  sentences.forEach((s, i) => {
+    const span = document.createElement('span');
+    span.className = 'sentence';
+    span.dataset.idx = i;
+    span.textContent = s + ' ';
+    span.onclick = () => jumpTo(i);
+    body.appendChild(span);
+  });
+
+  // Chapters
+  if(chapters.length > 1) {
+    document.getElementById('chaptersToggle').style.display = 'block';
+    const list = document.getElementById('chaptersList');
+    list.innerHTML = '';
+    chapters.forEach((ch, i) => {
+      const div = document.createElement('div');
+      div.className = 'chapter-item';
+      div.innerHTML = `<span class="chapter-num">${i+1}</span><span>${ch.title}</span>`;
+      div.onclick = () => jumpToChapter(i);
+      list.appendChild(div);
+    });
+  }
+}
+
+function updateStats(sentences, source, title) {
+  const words = sentences.join(' ').split(/\s+/).length;
+  const readMin = Math.ceil(words / (state.speed * 130));
+  document.getElementById('wordCount').textContent = words.toLocaleString();
+  document.getElementById('readTime').textContent = readMin;
+  document.getElementById('sentenceCount').textContent = sentences.length;
+}
+
+// ==================== SPEECH ====================
+function togglePlay() {
+  if(state.isPlaying) pauseSpeech();
+  else playSpeech();
+}
+
+function playSpeech() {
+  if(state.sentences.length === 0) return;
+  state.isPlaying = true;
+  updatePlayUI(true);
+  speakFrom(state.currentIdx);
+}
+
+function pauseSpeech() {
+  state.isPlaying = false;
+  window.speechSynthesis.cancel();
+  updatePlayUI(false);
+}
+
+function stopSpeech() {
+  state.isPlaying = false;
+  window.speechSynthesis.cancel();
+  updatePlayUI(false);
+}
+
+function speakFrom(idx) {
+  if(!state.isPlaying || idx >= state.sentences.length) {
+    if(idx >= state.sentences.length) {
+      state.isPlaying = false;
+      updatePlayUI(false);
+      showToast('🎉 Finished reading!', 'success');
+      // Auto-play next in queue
+      playNextInQueue();
+    }
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const sentence = state.sentences[idx];
+  state.currentIdx = idx;
+
+  // Paragraph pause
+  if(state.paraPause && sentence === '[PARA]') {
+    setTimeout(() => speakFrom(idx+1), 800);
+    return;
+  }
+
+  const utt = new SpeechSynthesisUtterance(sentence);
+  utt.rate = state.speed;
+  utt.pitch = state.pitch;
+  if(state.selectedVoice) utt.voice = state.selectedVoice;
+
+  utt.onstart = () => {
+    highlightSentence(idx);
+    updateProgress(idx);
+  };
+
+  utt.onend = () => {
+    markDone(idx);
+    speakFrom(idx + 1);
+  };
+
+  utt.onerror = (e) => {
+    if(e.error !== 'interrupted') speakFrom(idx + 1);
+  };
+
+  state.utterance = utt;
+  window.speechSynthesis.speak(utt);
+}
+
+function highlightSentence(idx) {
+  document.querySelectorAll('.sentence').forEach(el => {
+    el.classList.remove('reading');
+    if(parseInt(el.dataset.idx) < idx) el.classList.add('done');
+  });
+  const el = document.querySelector(`.sentence[data-idx="${idx}"]`);
+  if(el) {
+    if(state.highlight) el.classList.add('reading');
+    if(state.autoScroll) el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+
+function markDone(idx) {
+  const el = document.querySelector(`.sentence[data-idx="${idx}"]`);
+  if(el) { el.classList.remove('reading'); el.classList.add('done'); }
+}
+
+function updateProgress(idx) {
+  const pct = Math.round((idx / state.sentences.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${idx + 1} / ${state.sentences.length} sentences`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+// ==================== CONTROLS ====================
+function nextSentence() {
+  const wasPlaying = state.isPlaying;
+  stopSpeech();
+  state.currentIdx = Math.min(state.currentIdx + 1, state.sentences.length - 1);
+  if(wasPlaying) playSpeech();
+  else { highlightSentence(state.currentIdx); updateProgress(state.currentIdx); }
+}
+
+function prevSentence() {
+  const wasPlaying = state.isPlaying;
+  stopSpeech();
+  state.currentIdx = Math.max(state.currentIdx - 1, 0);
+  if(wasPlaying) playSpeech();
+  else { highlightSentence(state.currentIdx); updateProgress(state.currentIdx); }
+}
+
+function rewind() {
+  const wasPlaying = state.isPlaying;
+  stopSpeech();
+  state.currentIdx = Math.max(state.currentIdx - 2, 0);
+  if(wasPlaying) playSpeech();
+  else { highlightSentence(state.currentIdx); updateProgress(state.currentIdx); }
+}
+
+function fastForward() {
+  const wasPlaying = state.isPlaying;
+  stopSpeech();
+  state.currentIdx = Math.min(state.currentIdx + 5, state.sentences.length - 1);
+  if(wasPlaying) playSpeech();
+  else { highlightSentence(state.currentIdx); updateProgress(state.currentIdx); }
+}
+
+function jumpTo(idx) {
+  const wasPlaying = state.isPlaying;
+  stopSpeech();
+  state.currentIdx = idx;
+  highlightSentence(idx);
+  updateProgress(idx);
+  if(wasPlaying) playSpeech();
+}
+
+function jumpToChapter(chIdx) {
+  // Find the sentence that starts the chapter (rough heuristic)
+  const ch = state.chapters[chIdx];
+  const target = state.sentences.findIndex(s => s.includes(ch.title.substring(0,20)));
+  if(target >= 0) jumpTo(target);
+  toggleChapters();
+}
+
+function seekProgress(e) {
+  const track = document.getElementById('progressTrack');
+  const pct = e.offsetX / track.offsetWidth;
+  const idx = Math.floor(pct * state.sentences.length);
+  jumpTo(Math.max(0, Math.min(idx, state.sentences.length - 1)));
+}
+
+// ==================== SETTINGS ====================
+function updateSpeed(val) {
+  state.speed = parseFloat(val);
+  document.getElementById('speedVal').textContent = val + '×';
+  saveSettings();
+}
+
+function updatePitch(val) {
+  state.pitch = parseFloat(val);
+  document.getElementById('pitchVal').textContent = parseFloat(val).toFixed(1);
+  saveSettings();
+}
+
+function updateVoice() {
+  const sel = document.getElementById('voiceSelect');
+  const idx = parseInt(sel.value);
+  const sorted = [...state.voices].sort((a,b) => {
+    const preferred = ['Google UK English Female','Google US English','Microsoft Zira','Microsoft David','Alex','Samantha','Karen'];
+    const ai = preferred.findIndex(p => a.name.includes(p.split(' ')[1] || p));
+    const bi = preferred.findIndex(p => b.name.includes(p.split(' ')[1] || p));
+    if(ai >= 0 && bi < 0) return -1;
+    if(bi >= 0 && ai < 0) return 1;
+    return 0;
+  });
+  state.selectedVoice = sorted[idx];
+}
+
+function toggleChip(el, feature) {
+  el.classList.toggle('on');
+  const on = el.classList.contains('on');
+  if(feature === 'highlight') state.highlight = on;
+  if(feature === 'scroll') state.autoScroll = on;
+  if(feature === 'pause') state.paraPause = on;
+  saveSettings();
+}
+
+// ==================== UI HELPERS ====================
+function updatePlayUI(playing) {
+  const btn = document.getElementById('playBtn');
+  btn.textContent = playing ? '⏸' : '▶';
+  btn.classList.toggle('playing', playing);
+  document.querySelectorAll('.wave-bar').forEach(b => b.classList.toggle('paused', !playing));
+}
+
+function toggleChapters() {
+  document.getElementById('chaptersPanel').classList.toggle('open');
+}
+
+// ==================== QUEUE ====================
+function updateQueueUI() {
+  const q = state.queue;
+  document.getElementById('queueCount').textContent = q.length;
+  const section = document.getElementById('playlistSection');
+  section.classList.toggle('visible', q.length > 1);
+
+  const list = document.getElementById('playlistItems');
+  list.innerHTML = '';
+  q.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'playlist-item' + (i === q.length-1 ? ' active' : '');
+    div.innerHTML = `
+      <span class="item-icon">${item.icon}</span>
+      <span class="item-title">${item.title}</span>
+      <span class="item-duration">~${Math.ceil(item.sentences.length * 6 / 60)} min</span>
+      <button class="item-remove" onclick="removeFromQueue(${i},event)">✕</button>
+    `;
+    div.onclick = () => loadQueueItem(i);
+    list.appendChild(div);
+  });
+}
+
+function removeFromQueue(i, e) {
+  e.stopPropagation();
+  state.queue.splice(i, 1);
+  updateQueueUI();
+}
+
+function clearQueue() {
+  state.queue = [];
+  stopSpeech();
+  updateQueueUI();
+}
+
+function loadQueueItem(i) {
+  const item = state.queue[i];
+  state.sentences = item.sentences;
+  state.currentIdx = 0;
+  state.isPlaying = false;
+  stopSpeech();
+  renderReader(item.sentences, item.title, item.source, item.icon, item.chapters);
+  updateStats(item.sentences, item.source, item.title);
+  updateQueueUI();
+}
+
+function playNextInQueue() {
+  const currentIdx = state.queue.length - 1;
+  if(currentIdx + 1 < state.queue.length) {
+    loadQueueItem(currentIdx + 1);
+    setTimeout(() => playSpeech(), 500);
+  }
+}
+
+// ==================== STATUS ====================
+function setStatus(type, msg) {
+  const bar = document.getElementById('statusBar');
+  const spinner = document.getElementById('statusSpinner');
+  const text = document.getElementById('statusText');
+  bar.className = 'status-bar visible' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  spinner.style.display = type === 'loading' ? 'block' : 'none';
+  text.textContent = msg;
+}
+function hideStatus() { document.getElementById('statusBar').classList.remove('visible'); }
+
+// ==================== TOAST ====================
+function showToast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ==================== KEYBOARD ====================
+function setupKeyboard() {
+  document.addEventListener('keydown', e => {
+    const tag = e.target.tagName.toLowerCase();
+    if(['input','textarea','select'].includes(tag)) return;
+
+    switch(e.key) {
+      case ' ': e.preventDefault(); togglePlay(); break;
+      case 'ArrowRight': e.preventDefault(); nextSentence(); break;
+      case 'ArrowLeft': e.preventDefault(); prevSentence(); break;
+      case '+': case '=': updateSpeed(Math.min(2, state.speed + 0.1).toFixed(1)); document.getElementById('speedRange').value = state.speed; break;
+      case '-': updateSpeed(Math.max(0.5, state.speed - 0.1).toFixed(1)); document.getElementById('speedRange').value = state.speed; break;
+      case 'r': case 'R': rewind(); break;
+      case 'f': case 'F': fastForward(); break;
+    }
+  });
+}
+
+// ==================== SWIPE GESTURES (MOBILE) ====================
+function setupSwipeGestures() {
+  let touchStartX = 0, touchStartY = 0;
+  let touchStartTime = 0;
+  let lastTapTime = 0;
+
+  const MIN_SWIPE = 50;   // minimum px to count as a swipe
+  const MAX_SWIPE_TIME = 400; // ms
+
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    // Ignore if touching an interactive element (buttons, inputs, sliders, select)
+    const tag = e.target.tagName.toLowerCase();
+    if (['button','input','select','textarea','option'].includes(tag)) return;
+
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+
+    // Double-tap → Play/Pause
+    if (absDx < 15 && absDy < 15 && dt < 250) {
+      const now = Date.now();
+      if (now - lastTapTime < 350) {
+        togglePlay();
+        showSwipeFeedback(state.isPlaying ? '⏸' : '▶', state.isPlaying ? 'Paused' : 'Playing', '');
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+      return;
+    }
+
+    // Must be a fast enough gesture
+    if (dt > MAX_SWIPE_TIME) return;
+    // Must travel enough distance
+    if (absDx < MIN_SWIPE && absDy < MIN_SWIPE) return;
+
+    if (absDx > absDy) {
+      // Horizontal swipe
+      if (dx > 0) {
+        // Swipe RIGHT → Next sentence
+        nextSentence();
+        showSwipeFeedback('👉', 'Next sentence', '→');
+      } else {
+        // Swipe LEFT → Previous sentence
+        prevSentence();
+        showSwipeFeedback('👈', 'Prev sentence', '←');
+      }
+    } else {
+      // Vertical swipe — only trigger if player is visible
+      if (!document.getElementById('playerSection').classList.contains('visible')) return;
+      if (dy < 0) {
+        // Swipe UP → Speed up
+        const newSpeed = Math.min(2, parseFloat((state.speed + 0.1).toFixed(1)));
+        updateSpeed(newSpeed);
+        document.getElementById('speedRange').value = newSpeed;
+        showSwipeFeedback('⚡', `Speed ${newSpeed}×`, 'swipe up');
+      } else {
+        // Swipe DOWN → Slow down
+        const newSpeed = Math.max(0.5, parseFloat((state.speed - 0.1).toFixed(1)));
+        updateSpeed(newSpeed);
+        document.getElementById('speedRange').value = newSpeed;
+        showSwipeFeedback('🐢', `Speed ${newSpeed}×`, 'swipe down');
+      }
+    }
+  }, { passive: true });
+}
+
+let swipeFeedbackTimer = null;
+function showSwipeFeedback(icon, text, label) {
+  const el = document.getElementById('swipeFeedback');
+  document.getElementById('sfIcon').textContent = icon;
+  document.getElementById('sfText').textContent = text;
+  document.getElementById('sfLabel').textContent = label;
+  el.classList.add('show');
+  if (swipeFeedbackTimer) clearTimeout(swipeFeedbackTimer);
+  swipeFeedbackTimer = setTimeout(() => el.classList.remove('show'), 900);
+}
+
+// ==================== DRAG & DROP ====================
+function setupDragDrop() {
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if(file) processFile(file);
+  });
+}
+
+// ==================== SETTINGS PERSISTENCE ====================
+function saveSettings() {
+  try {
+    const s = { speed: state.speed, pitch: state.pitch, highlight: state.highlight, autoScroll: state.autoScroll, paraPause: state.paraPause };
+    localStorage.setItem('earlearn_settings', JSON.stringify(s));
+  } catch(e) {}
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('earlearn_settings') || '{}');
+    if(s.speed) { state.speed = s.speed; document.getElementById('speedRange').value = s.speed; document.getElementById('speedVal').textContent = s.speed + '×'; }
+    if(s.pitch) { state.pitch = s.pitch; document.getElementById('pitchRange').value = s.pitch; document.getElementById('pitchVal').textContent = parseFloat(s.pitch).toFixed(1); }
+    if(s.highlight === false) { state.highlight = false; document.getElementById('chipHighlight').classList.remove('on'); }
+    if(s.autoScroll === false) { state.autoScroll = false; document.getElementById('chipScroll').classList.remove('on'); }
+    if(s.paraPause === true) { state.paraPause = true; document.getElementById('chipPause').classList.add('on'); }
+  } catch(e) {}
+}
+
+// ==================== THEME ====================
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '🌙 Dark Mode' : '☀ Light Mode';
+}
+
+// Light theme overrides
+const lightStyle = document.createElement('style');
+lightStyle.textContent = `
+body.light { --bg:#f4f5f7; --surface:#ffffff; --surface2:#f0f1f4; --surface3:#e4e6eb; --border:#d1d5e0; --text:#1a1d24; --text2:#4d5568; --text3:#9ba3b8; }
+body.light::before { display:none; }
+`;
+document.head.appendChild(lightStyle);
+
+function showShortcuts() {
+  showToast('Space=Play  ←→=Navigate  +-=Speed  R=Rewind  F=Forward', 'info');
+}
+</script>
+</body>
+</html>
